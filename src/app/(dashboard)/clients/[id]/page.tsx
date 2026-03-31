@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   formatCurrency, formatDate, getStatusLabel, getPaymentMethodLabel,
-  getBillingTypeLabel, formatCVU, buildWhatsAppLink,
+  getBillingTypeLabel, formatCVU, buildWhatsAppLink, getInvoiceTypeLabel,
 } from '@/lib/utils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -360,7 +360,7 @@ export default function ClientDetailPage() {
                               className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
                             >
                               <Receipt className="w-3 h-3" />
-                              {charge.invoice.type.replace('_', ' ')}
+                              {getInvoiceTypeLabel(charge.invoice.type)}
                               {charge.invoice.number ? ` #${charge.invoice.number}` : ''}
                             </a>
                           )}
@@ -520,7 +520,7 @@ export default function ClientDetailPage() {
                       variant={log.channel === 'WHATSAPP' ? 'success' : 'default'}
                       className="text-xs flex-shrink-0 mt-0.5"
                     >
-                      {log.channel}
+                      {log.channel === 'WHATSAPP' ? 'WhatsApp' : 'Email'}
                     </Badge>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-muted-2 truncate">{log.message.substring(0, 100)}</p>
@@ -530,7 +530,7 @@ export default function ClientDetailPage() {
                       variant={log.status === 'sent' ? 'secondary' : 'destructive'}
                       className="text-xs flex-shrink-0"
                     >
-                      {log.status}
+                      {getStatusLabel(log.status)}
                     </Badge>
                   </div>
                 ))}

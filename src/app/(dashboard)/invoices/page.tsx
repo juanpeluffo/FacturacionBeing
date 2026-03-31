@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Download, Receipt, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate, getStatusLabel } from '@/lib/utils'
+import { formatCurrency, formatDate, getStatusLabel, getInvoiceTypeLabel } from '@/lib/utils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -32,15 +32,6 @@ export default function InvoicesPage() {
     '/api/invoices',
     fetcher
   )
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'AFIP_B': return 'Factura B (AFIP)'
-      case 'AFIP_C': return 'Factura C (AFIP)'
-      case 'COMMON': return 'Factura Común'
-      default: return type
-    }
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -92,7 +83,7 @@ export default function InvoicesPage() {
                       {invoice.client.name}
                     </Link>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      {getTypeLabel(invoice.type)}
+                      {getInvoiceTypeLabel(invoice.type)}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 mt-1">

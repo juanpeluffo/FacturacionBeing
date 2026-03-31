@@ -56,7 +56,20 @@ export function getStatusLabel(status: string): string {
     case 'DRAFT': return 'Borrador'
     case 'SENT': return 'Enviado'
     case 'CANCELLED': return 'Cancelado'
+    // notification log statuses
+    case 'sent': return 'Enviado'
+    case 'failed': return 'Error'
+    case 'delivered': return 'Entregado'
     default: return status
+  }
+}
+
+export function getInvoiceTypeLabel(type: string): string {
+  switch (type) {
+    case 'AFIP_B': return 'Factura B (AFIP)'
+    case 'AFIP_C': return 'Factura C (AFIP)'
+    case 'COMMON': return 'Factura Común'
+    default: return type.replace('_', ' ')
   }
 }
 
