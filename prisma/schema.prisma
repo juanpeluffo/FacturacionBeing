@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BillingType {
+  AFIP
+  COMMON
+}
+
+enum ChargeStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum PaymentMethod {
+  CVU
+  CASH
+  BANK_TRANSFER
+  OTHER
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+}
+
+enum InvoiceType {
+  AFIP_B
+  AFIP_C
+  COMMON
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id          String      @id @default(cuid())
+  name        String
+  cuit        String?
+  email       String?
+  whatsapp    String?
+  billingType BillingType @default(COMMON)
+  cvuId       String?     // Talo Pay CVU account ID
+  cvu         String?     // actual CVU number (22 digits)
+  alias       String?     // CBU alias
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  charges          Charge[]
+  payments         Payment[]
+  invoices         Invoice[]
+  notificationLogs NotificationLog[]
+
+  @@index([cuit])
+}
+
+model Charge {
+  id          String       @id @default(cuid())
+  clientId    String
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  amount      Decimal      @db.Decimal(14, 2)
+  description String
+  date        DateTime
+  dueDate     DateTime?
+  status      ChargeStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  paymentAllocations PaymentAllocation[]
+  notificationLogs   NotificationLog[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  clientId   String
+  client     Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  amount     Decimal       @db.Decimal(14, 2)
+  date       DateTime
+  method     PaymentMethod @default(CVU)
+  reference  String?       // bank reference, receipt number, etc
+  notes      String?
+  externalId String?       // Talo Pay transaction ID (for dedup)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  allocations PaymentAllocation[]
+
+  @@unique([externalId])
+  @@index([clientId])
+  @@index([date])
+}
+
+// Many-to-many between Payment and Charge, tracking how much of a payment applies to each charge
+model PaymentAllocation {
+  id        String  @id @default(cuid())
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  chargeId  String
+  charge    Charge  @relation(fields: [chargeId], references: [id], onDelete: Cascade)
+  amount    Decimal @db.Decimal(14, 2)
+
+  @@unique([paymentId, chargeId])
+  @@index([chargeId])
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  clientId   String
+  client     Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type       InvoiceType
+  number     Int?          // AFIP invoice number
+  puntoVenta Int?          // AFIP punto de venta
+  cae        String?       // AFIP CAE code
+  caeDue     DateTime?     // AFIP CAE expiry date
+  pdfUrl     String?       // path or URL to generated PDF
+  items      Json          // [{description, quantity, unitPrice, ivaRate, subtotal}]
+  subtotal   Decimal       @db.Decimal(14, 2)
+  iva        Decimal?      @db.Decimal(14, 2)
+  total      Decimal       @db.Decimal(14, 2)
+  dueDate    DateTime?
+  status     InvoiceStatus @default(DRAFT)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  charges Charge[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model NotificationLog {
+  id        String              @id @default(cuid())
+  clientId  String
+  client    Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  channel   NotificationChannel
+  message   String
+  status    String              @default("sent") // sent | failed | delivered
+  chargeId  String?
+  charge    Charge?             @relation(fields: [chargeId], references: [id])
+  metadata  Json?               // additional data (messageId, error, etc)
+  createdAt DateTime            @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+}

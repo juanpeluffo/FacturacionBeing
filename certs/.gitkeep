@@ -1,0 +1,4 @@
+# Place your AFIP certificates here:
+# - afip.crt (certificate .pem)
+# - afip.key (private key)
+# These files are git-ignored for security

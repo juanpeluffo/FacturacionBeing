@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-white antialiased;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-2 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: #CAFF00;
+    color: #000;
+  }
+}
+
+@layer components {
+  /* Focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Animated underline */
+  .link-underline {
+    @apply relative after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent after:transition-all hover:after:w-full;
+  }
+
+  /* Card hover */
+  .card-hover {
+    @apply transition-all duration-200 hover:border-border-2;
+  }
+}
+
+/* Recharts custom styles */
+.recharts-default-tooltip {
+  background-color: #111 !important;
+  border: 1px solid #333 !important;
+  border-radius: 6px !important;
+}
+
+.recharts-tooltip-label {
+  color: #888 !important;
+  font-size: 12px !important;
+}
+
+/* Number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.5;
+}
